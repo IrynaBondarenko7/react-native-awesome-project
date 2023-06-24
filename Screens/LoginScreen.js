@@ -12,11 +12,13 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
   const [isEmailFocused, setEmailFocused] = useState(false);
   const [isPasswordFocused, setPasswordFocused] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isEmailValid, setEmailValid] = useState(true);
+  const [isPasswordShow, setIsPasswordShow] = useState(true);
 
   const handleEmailFocus = () => {
     setEmailFocused(true);
@@ -24,6 +26,7 @@ export default function LoginScreen() {
 
   const handleEmailBlur = () => {
     setEmailFocused(false);
+    validateEmail(email);
   };
 
   const handlePasswordFocus = () => {
@@ -38,10 +41,27 @@ export default function LoginScreen() {
     password,
   };
 
-  const onSubmit = () => {
-    console.log(form);
+  // const onSubmit = () => {
+  //   console.log(form);
+  // };
+  const validateEmail = (text) => {
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    const isValid = emailRegex.test(text);
+    setEmailValid(isValid);
   };
 
+  const handleSubmit = () => {
+    validateEmail(email);
+    if (isEmailValid) {
+      console.log(form);
+      navigation.navigate("Home");
+    } else {
+      console.log("Введіть пошту у форматі abcd@mail.com");
+    }
+  };
+  const showPassword = () => {
+    setIsPasswordShow(!isPasswordShow);
+  };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
@@ -71,8 +91,14 @@ export default function LoginScreen() {
                   onFocus={handleEmailFocus}
                   onBlur={handleEmailBlur}
                   onChangeText={setEmail}
+                  keyboardType="email-address"
                 />
               </KeyboardAvoidingView>
+              {!isEmailValid && (
+                <Text style={styles.errorText}>
+                  Введіть пошту у форматі abcd@mail.com
+                </Text>
+              )}
               <View style={styles.passwordWrap}>
                 <KeyboardAvoidingView
                   behavior={Platform.OS == "ios" ? "padding" : "height"}
@@ -85,13 +111,16 @@ export default function LoginScreen() {
                     placeholder="Пароль"
                     placeholderTextColor="#BDBDBD"
                     value={password}
-                    secureTextEntry={true}
+                    secureTextEntry={isPasswordShow}
                     onFocus={handlePasswordFocus}
                     onBlur={handlePasswordBlur}
                     onChangeText={setPassword}
                   />
                 </KeyboardAvoidingView>
-                <TouchableOpacity style={styles.toggleButton}>
+                <TouchableOpacity
+                  style={styles.toggleButton}
+                  onPress={showPassword}
+                >
                   <Text style={styles.toggleButtonText}>Показати</Text>
                 </TouchableOpacity>
               </View>
@@ -99,13 +128,19 @@ export default function LoginScreen() {
               <TouchableOpacity
                 style={styles.btn}
                 activeOpacity={0.7}
-                onPress={onSubmit}
+                onPress={handleSubmit}
               >
                 <Text style={styles.btnText}>Увійти</Text>
               </TouchableOpacity>
               <View style={styles.linkWrap}>
                 <Text style={styles.linkText}>Немає акаунту?</Text>
-                <TouchableOpacity style activeOpacity={0.7}>
+                <TouchableOpacity
+                  style
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.navigate("RegistrationScreen");
+                  }}
+                >
                   <View>
                     <Text style={styles.linkText}> Зареєструватися</Text>
                     <View style={styles.underline} />
@@ -191,5 +226,9 @@ const styles = StyleSheet.create({
   },
   toggleButtonText: {
     color: "#1B4371",
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 15,
   },
 });

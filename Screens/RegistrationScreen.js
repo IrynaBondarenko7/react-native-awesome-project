@@ -12,14 +12,17 @@ import {
   Keyboard,
 } from "react-native";
 import React, { useState } from "react";
+import { removeData, storeData } from "../asyncStorage/AsyncStorage";
 
-export default function RegistrationScreen() {
+export default function RegistrationScreen({ navigation }) {
   const [isLoginFocused, setLoginFocused] = useState(false);
   const [isEmailFocused, setEmailFocused] = useState(false);
   const [isPasswordFocused, setPasswordFocused] = useState(false);
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isEmailValid, setEmailValid] = useState(true);
+  const [isPasswordShow, setIsPasswordShow] = useState(true);
 
   const handleLoginFocus = () => {
     setLoginFocused(true);
@@ -34,6 +37,7 @@ export default function RegistrationScreen() {
 
   const handleEmailBlur = () => {
     setEmailFocused(false);
+    validateEmail(email);
   };
 
   const handlePasswordFocus = () => {
@@ -49,8 +53,28 @@ export default function RegistrationScreen() {
     password,
   };
 
-  const onSubmit = () => {
-    console.log(form);
+  const validateEmail = (text) => {
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    const isValid = emailRegex.test(text);
+    setEmailValid(isValid);
+  };
+
+  const handleSubmit = async () => {
+    validateEmail(email);
+    if (isEmailValid) {
+      // console.log(form);
+      // navigation.navigate("Home");
+      let loginStatus = {
+        status: "hello",
+      };
+      await storeData(loginStatus);
+      // await removeData();
+    } else {
+      console.log("Введіть пошту у форматі abcd@mail.com");
+    }
+  };
+  const showPassword = () => {
+    setIsPasswordShow(!isPasswordShow);
   };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -103,8 +127,14 @@ export default function RegistrationScreen() {
                   onFocus={handleEmailFocus}
                   onBlur={handleEmailBlur}
                   onChangeText={setEmail}
+                  keyboardType="email-address"
                 />
               </KeyboardAvoidingView>
+              {!isEmailValid && (
+                <Text style={styles.errorText}>
+                  Введіть пошту у форматі abcd@mail.com
+                </Text>
+              )}
               <View style={styles.passwordWrap}>
                 <KeyboardAvoidingView
                   behavior={Platform.OS == "ios" ? "padding" : "height"}
@@ -120,9 +150,13 @@ export default function RegistrationScreen() {
                     onFocus={handlePasswordFocus}
                     onBlur={handlePasswordBlur}
                     onChangeText={setPassword}
+                    secureTextEntry={isPasswordShow}
                   />
                 </KeyboardAvoidingView>
-                <TouchableOpacity style={styles.toggleButton}>
+                <TouchableOpacity
+                  style={styles.toggleButton}
+                  onPress={showPassword}
+                >
                   <Text style={styles.toggleButtonText}>Показати</Text>
                 </TouchableOpacity>
               </View>
@@ -130,13 +164,19 @@ export default function RegistrationScreen() {
               <TouchableOpacity
                 style={styles.btn}
                 activeOpacity={0.7}
-                onPress={onSubmit}
+                onPress={handleSubmit}
               >
                 <Text style={styles.btnText}>Зареєструватися</Text>
               </TouchableOpacity>
               <View style={styles.linkWrap}>
                 <Text style={styles.linkText}>Вже є акаунт?</Text>
-                <TouchableOpacity style activeOpacity={0.7}>
+                <TouchableOpacity
+                  style
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.navigate("LoginScreen");
+                  }}
+                >
                   <Text style={styles.linkText}> Увійти</Text>
                 </TouchableOpacity>
               </View>
@@ -173,7 +213,7 @@ const styles = StyleSheet.create({
   },
   avatarWrap: {
     position: "absolute",
-    left: 132,
+    left: "35%",
     top: -60,
   },
   avatar: {
@@ -240,5 +280,9 @@ const styles = StyleSheet.create({
   },
   toggleButtonText: {
     color: "#1B4371",
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 15,
   },
 });
